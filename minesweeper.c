@@ -32,6 +32,7 @@
 
 void initialise_field(int minefield[SIZE][SIZE]);
 void print_debug_minefield(int minefield[SIZE][SIZE]);
+void mine_amount_square(int minefield[SIZE][SIZE]);
 
 // Place your function prototyes here.
 
@@ -113,23 +114,64 @@ int main(void) {
     
     int axis_to_look = 0;
     int command_type = 0;
-    while (scanf("%d %d", &command_type, &axis_to_look) == 1) {            
+    while (scanf("%d %d", &command_type, &axis_to_look) == 2) { 
+    
         if (command_type == DETECT_ROW) {           
             printf("There are %d mine(s) in row %d\n", mines_in_row[axis_to_look], axis_to_look);             
         }
         else if (command_type == DETECT_COL) {           
             printf("There are %d mine(s) in column %d\n", mines_in_column[axis_to_look],axis_to_look);        
         }
-       
+        
+        //STAGE 02 detect square: when you enter the command then the coordinates
+        // of the square to want to detect it will count how many mines in a size x 
+        //size area.
+        if (command_type == DETECT_SQUARE) {
+            mine_amount_square(minefield);
+        }
         print_debug_minefield(minefield);
-    }   
-
+    }    
 
     
        
            
     return 0;
 }                                     
+//stage 2 counting mines in a square
+void mine_amount_square(int minefield[SIZE][SIZE]) { 
+    int row_to_look = 0;
+    int col_to_look = 0;
+    int square_size = 0;   
+    scanf("%d %d %d", &row_to_look, &col_to_look, &square_size);
+    //actucal counting of mines in a square 
+    int row_counter = 0;
+    int column_counter = 0;
+    int mines_in_square[] = {0};
+    //to specify where to start scanning
+    row_counter = row_to_look - (square_size / 2);
+    column_counter = col_to_look - (square_size / 2);
+    //to specify where to stop scanning
+    int row_stop = 0;
+    int col_stop = 0;
+    row_stop = row_to_look + (square_size / 2);
+    col_stop = col_to_look + (square_size / 2);
+    int mines_counter = 0;
+    while (row_counter <= row_stop) {
+        while (column_counter <= col_stop) {
+            if (minefield[row_counter][column_counter] == HIDDEN_MINE) {
+                mines_in_square[mines_counter] ++;
+                mines_counter = mines_counter + 1;
+            }          
+            column_counter = column_counter + 1;         
+        }
+        row_counter = row_counter + 1;
+        column_counter = 0;    
+    }
+    printf("There are %d mine(s) in the square centered at row %d, column %d of size %d", mines_in_square[row_counter], row_to_look, col_to_look, square_size);
+        
+}
+         
+      
                  
 // Set the entire minefield to HIDDEN_SAFE.
 void initialise_field(int minefield[SIZE][SIZE]) {

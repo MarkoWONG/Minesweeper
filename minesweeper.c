@@ -118,31 +118,58 @@ int main(void) {
     int axis_to_look = 0;
     int command_type = 0;
     int game_stopper = 1;
+    int hints_left = 3;
     while (scanf("%d", &command_type) == 1 && game_stopper == 1) { 
         
         //STAGE 01 Counting Mines In A Row Or Column: when you enter the command
         //then the coordinates of the row or column to want to detect it will 
         //count how many mines in a row or column.
-        if (command_type == DETECT_ROW) {
+        if (command_type == DETECT_ROW && hints_left > 0) {
             scanf("%d", &axis_to_look);           
-            printf("There are %d mine(s) in row %d\n", mines_in_row[axis_to_look], axis_to_look);             
+            printf("There are %d mine(s) in row %d\n", mines_in_row[axis_to_look], axis_to_look); 
+            hints_left = hints_left - 1;            
         }
-        else if (command_type == DETECT_COL) {     
+        else if (command_type == DETECT_COL && hints_left > 0) {     
             scanf("%d", &axis_to_look);      
-            printf("There are %d mine(s) in column %d\n", mines_in_column[axis_to_look], axis_to_look);        
+            printf("There are %d mine(s) in column %d\n", mines_in_column[axis_to_look], axis_to_look);
+            hints_left = hints_left - 1;          
         }
         
         //STAGE 02 Detect Square: when you enter the command then the 
         //coordinates of the square to want to detect it will count how many  
         //mines in a size x size area.
-        else if (command_type == DETECT_SQUARE) {
-            mine_amount_square(minefield);           
+        else if (command_type == DETECT_SQUARE && hints_left > 0) {
+            mine_amount_square(minefield);
+            hints_left = hints_left - 1;             
+        }
+        
+        //STAGE 03 Restrict Hints: print "Help already used" if Detect Row, 
+        //Detect Column, and Detect Square had been used 3 times  
+
+        int extra_input1 = 0;  
+        int extra_input2 = 0;
+        int extra_input3 = 0;  
+        if (hints_left == 0 && command_type != REVEAL_SQUARE) {
+            int first_time = 0;        
+            if (first_time == 0) {
+                first_time++;
+                print_debug_minefield(minefield);
+                printf ("true\n");                            
+            }             
+            // extra input is to use up the extra input by the user           
+            else if (command_type == DETECT_ROW || command_type == DETECT_COL) {
+                scanf("%d", &extra_input1);
+            }
+            else if (command_type == DETECT_SQUARE) {
+                scanf("%d %d %d", &extra_input1, &extra_input2, &extra_input3);
+            }                      
+            printf("Help already used\n");
         }
         
         //STAGE 02 Reveal Square: when you enter the command then the 
         //coordinates of the square to want to detect it will follow one of the 
         //4 options.
-        else if (command_type == REVEAL_SQUARE) {
+        if (command_type == REVEAL_SQUARE) {
             int row_to_look = 0;
             int col_to_look = 0;
             scanf("%d %d", &row_to_look, &col_to_look);
@@ -164,23 +191,23 @@ int main(void) {
             //1. reveal whole square when there is no mines            
             if (mines_counter == 0) {
                 //accounting for when the inputs are on the corners!
-                //top left bound **
+                //top left bound 
                 if (row_to_look == 0 && col_to_look == 0) { 
                     row_counter2 = row_to_look;
                     column_counter2 = col_to_look;
                     col_restart = col_to_look;                      
                 }
-                //bottom right bound **
+                //bottom right bound 
                 else if (row_to_look == (SIZE - 1) && col_to_look == (SIZE - 1)) {
                     row_stop = row_to_look;
                     col_stop = col_to_look;
                 }
-                //top right bound **
+                //top right bound 
                 else if (row_to_look == 0 && col_to_look == (SIZE - 1)) {
                     row_counter2 = row_to_look;
                     col_stop = col_to_look;
                 }
-                //bottom left bound **
+                //bottom left bound 
                 else if (row_to_look == (SIZE - 1) && col_to_look == 0) {
                     column_counter2 = col_to_look;
                     col_restart = col_to_look; 
@@ -247,6 +274,7 @@ int main(void) {
         }
             
         print_debug_minefield(minefield);
+        
     }    
    
            

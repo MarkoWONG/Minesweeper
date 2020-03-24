@@ -38,9 +38,23 @@ void actualPlacing(int mine_axis_y, int mine_axis_x, int minefield[SIZE][SIZE]);
 int count_mines_row(int hints_left, int mines_in_row[SIZE], int axis_to_look);
 int count_mines_col(int hints_left, int mines_in_col[SIZE], int axis_to_look);  
 void mine_amount_square(int minefield[SIZE][SIZE], int hints_left);
-int revealSquare(int minefield[SIZE][SIZE], int rowToLook, int colToLook, int gameplay_toggle);
-int minesInSquare(int minefield[SIZE][SIZE], int rowToLook, int colToLook, int squareSize);
-void mines_adjacent(int minefield[SIZE][SIZE], int row_counter, int column_counter, int squareSize, int gameplay_toggle);
+int revealSquare(
+    int minefield[SIZE][SIZE], 
+    int rowToLook, 
+    int colToLook, 
+    int gameplay_toggle
+);
+int minesInSquare(int minefield[SIZE][SIZE], 
+    int rowToLook, 
+    int colToLook, 
+    int squareSize
+);
+void mines_adjacent(int minefield[SIZE][SIZE], 
+    int row_counter, 
+    int column_counter, 
+    int squareSize, 
+    int gameplay_toggle
+);
 int safe_left(int minefield[SIZE][SIZE]);
 void gameplay(int minefield[SIZE][SIZE], int game_stopper, int minesCounter);
 void normal_revert(int minefield[SIZE][SIZE]);
@@ -119,11 +133,19 @@ int main(void) {
         //count how many mines in a row or column.
         if (command_type == DETECT_ROW) {
             scanf("%d", &axis_to_look);  
-            hints_left = count_mines_row(hints_left, mines_in_row, axis_to_look);                             
+            hints_left = count_mines_row(
+                hints_left, 
+                mines_in_row, 
+                axis_to_look
+            );                             
         }
         else if (command_type == DETECT_COL) {     
             scanf("%d", &axis_to_look);
-            hints_left = count_mines_col(hints_left, mines_in_column, axis_to_look);                                         
+            hints_left = count_mines_col(
+                hints_left, 
+                mines_in_column, 
+                axis_to_look
+            );                                         
         }
         
         //STAGE 02 Detect Square: when you enter the command then the 
@@ -142,7 +164,12 @@ int main(void) {
             int colToLook = 0;
             scanf("%d %d", &rowToLook, &colToLook);
             //1. & 2. & 3. are in the function below
-            minesCounter = revealSquare(minefield, rowToLook, colToLook, gameplay_toggle);
+            minesCounter = revealSquare(
+                minefield, 
+                rowToLook, 
+                colToLook, 
+                gameplay_toggle
+            );
             if (minesCounter == - 1) {
                 game_stopper = game_stopper - 2;  
             }                  
@@ -212,7 +239,11 @@ void place_mines(int minefield[SIZE][SIZE], int number_of_mines) {
     } 
 }  
 //this function is part of the function above                       
-void actualPlacing(int mine_axis_y, int mine_axis_x, int minefield[SIZE][SIZE]) {                
+void actualPlacing(
+    int mine_axis_y, 
+    int mine_axis_x, 
+    int minefield[SIZE][SIZE]
+) {                
     if (mine_axis_y >= 0 && mine_axis_x >= 0 ) {
         minefield[mine_axis_y][mine_axis_x] = HIDDEN_MINE;
     }
@@ -250,7 +281,12 @@ void mine_amount_square(int minefield[SIZE][SIZE], int hints_left) {
     int squareSize = 0;   
     scanf("%d %d %d", &rowToLook, &colToLook, &squareSize);
     //counts the amount of mines in a square
-    int minesCounter = minesInSquare(minefield, rowToLook, colToLook, squareSize);
+    int minesCounter = minesInSquare(
+        minefield, 
+        rowToLook, 
+        colToLook, 
+        squareSize
+    );
     if (hints_left > 0) {
         printf("There are %d mine(s) in the square centered ", minesCounter);
         printf("at row %d, column %d", rowToLook, colToLook);
@@ -263,10 +299,20 @@ void mine_amount_square(int minefield[SIZE][SIZE], int hints_left) {
          
 //STAGE 02 Reveal Square: 1. no adjacent mines, then reveal all of its adjacent 
 //squares. 3. reveal the input coordinate if there is a mine adjacent to it
-int revealSquare(int minefield[SIZE][SIZE], int rowToLook, int colToLook, int gameplay_toggle) {
+int revealSquare(
+    int minefield[SIZE][SIZE], 
+    int rowToLook, 
+    int colToLook, 
+    int gameplay_toggle
+) {
     //counts the amount of mines in a 3x3 square
     int squareSize = 3;
-    int minesCounter = minesInSquare(minefield, rowToLook, colToLook, squareSize);
+    int minesCounter = minesInSquare(
+        minefield, 
+        rowToLook, 
+        colToLook, 
+        squareSize
+    );
     
     //1. reveal whole square when there is no mines 
     if (minesCounter == 0) {
@@ -332,7 +378,13 @@ int revealSquare(int minefield[SIZE][SIZE], int rowToLook, int colToLook, int ga
         while (row_counter <= row_stop) {
             while (column_counter <= col_stop) {
                 minefield[row_counter][column_counter] = VISIBLE_SAFE; 
-                mines_adjacent(minefield, row_counter, column_counter, squareSize, gameplay_toggle);                                
+                mines_adjacent(
+                    minefield, 
+                    row_counter, 
+                    column_counter, 
+                    squareSize, 
+                    gameplay_toggle
+                );                                
                 column_counter = column_counter + 1;
                        
             }
@@ -367,7 +419,12 @@ int revealSquare(int minefield[SIZE][SIZE], int rowToLook, int colToLook, int ga
 } 
 
 //STAGE 02: counts the amount of mines in a square
-int minesInSquare(int minefield[SIZE][SIZE], int rowToLook, int colToLook, int squareSize) {
+int minesInSquare(
+    int minefield[SIZE][SIZE], 
+    int rowToLook, 
+    int colToLook, 
+    int squareSize
+) {
     int row_counter = 0;
     int column_counter = 0;
     //to specify where to start scanning
@@ -388,7 +445,10 @@ int minesInSquare(int minefield[SIZE][SIZE], int rowToLook, int colToLook, int s
         col_restart = 0;
     }
     //bottom right bound
-    else if (rowToLook == (SIZE - (squareSize / 2)) && colToLook == (SIZE - (squareSize / 2))) {
+    else if (
+        rowToLook == (SIZE - (squareSize / 2)) && 
+        colToLook == (SIZE - (squareSize / 2))
+    ) {
         row_stop = rowToLook;
         col_stop = colToLook;
     }
@@ -437,9 +497,20 @@ int minesInSquare(int minefield[SIZE][SIZE], int rowToLook, int colToLook, int s
     return minesCounter;
 } 
 //STAGE 03 shows the number of adjacent mines
-void mines_adjacent(int minefield[SIZE][SIZE], int row_counter, int column_counter, int squareSize, int gameplay_toggle) {
+void mines_adjacent(
+    int minefield[SIZE][SIZE], 
+    int row_counter, 
+    int column_counter, 
+    int squareSize, 
+    int gameplay_toggle
+) {
     if (gameplay_toggle == 1) {
-        int mines_adjacent = minesInSquare(minefield, row_counter, column_counter, squareSize);
+        int mines_adjacent = minesInSquare(
+            minefield, 
+            row_counter, 
+            column_counter, 
+            squareSize
+        );
         minefield[row_counter][column_counter] = mines_adjacent;
         if (mines_adjacent == 1) {
             minefield[row_counter][column_counter] = -1;
@@ -470,7 +541,11 @@ int safe_left(int minefield[SIZE][SIZE]) {
 }
 
 //STAGE 03 Formatted Printing:
-void gameplay(int minefield[SIZE][SIZE], int game_stopper, int minesCounter) {
+void gameplay(
+    int minefield[SIZE][SIZE], 
+    int game_stopper, 
+    int minesCounter
+) {
     if (game_stopper >= 0) {
         printf("..\n");
         printf("\\/\n");
@@ -488,7 +563,10 @@ void gameplay(int minefield[SIZE][SIZE], int game_stopper, int minesCounter) {
     while (row_counter < SIZE) {
         printf("%.2d |", row_number);
         while (column_counter < SIZE) { 
-            if (game_stopper == -1 && minefield[row_counter][column_counter] == HIDDEN_MINE) {
+            if (
+                game_stopper == -1 && 
+                minefield[row_counter][column_counter] == HIDDEN_MINE
+            ) {
                 printf("() ");
             }                
             else if (minefield[row_counter][column_counter] == VISIBLE_SAFE) {

@@ -2,7 +2,7 @@
 // minesweeper.c
 //
 // This program was written by Marko Wong (z5309371)
-// on 10/03/2020
+// on 10/03/2020 to 25/03/2020
 //
 // Version 1.0.0 (2020-03-08): Assignment released.
 // Version 1.0.1 (2020-03-08): Fix punctuation in comment.
@@ -20,7 +20,7 @@
 // The size of the starting grid.
 #define SIZE 8
 
-// The possible command codes.
+// Command codes
 #define DETECT_ROW              1
 #define DETECT_COL              2
 #define DETECT_SQUARE           3
@@ -29,21 +29,28 @@
 #define DEBUG_MODE              6
 #define REVEAL_RADIAL           7
 
-// Add any extra #defines here.
-
+//Function Prototyes
 void initialise_field(int minefield[SIZE][SIZE]);
 void print_debug_minefield(int minefield[SIZE][SIZE]);
 void place_mines(int minefield[SIZE][SIZE], int number_of_mines);
-void actualPlacing(int mine_axis_y, int mine_axis_x, int minefield[SIZE][SIZE]);
-int count_mines_row(int hints_left, int mines_in_row[SIZE], int axis_to_look);
-int count_mines_col(int hints_left, int mines_in_col[SIZE], int axis_to_look);  
+int count_mines_row(
+    int hints_left, 
+    int axis_to_look, 
+    int minefield[SIZE][SIZE]
+);
+int count_mines_col(
+    int hints_left, 
+    int axis_to_look, 
+    int minefield[SIZE][SIZE]
+);  
 void mine_amount_square(int minefield[SIZE][SIZE], int hints_left);
-int revealSquare(
+int reveal(
     int minefield[SIZE][SIZE], 
     int rowToLook, 
     int colToLook, 
     int gameplay_toggle,
-    int command_type
+    int command_type,
+    int first_turn
 );
 int minesInSquare(int minefield[SIZE][SIZE], 
     int rowToLook, 
@@ -73,69 +80,37 @@ void reveal_redial(
     int squareSize
 );
 int safe_left(int minefield[SIZE][SIZE]);
+void safe_first(int minesCounter, int minefield[SIZE][SIZE]);
 void gameplay(int minefield[SIZE][SIZE], int game_stopper, int minesCounter);
 void normal_revert(int minefield[SIZE][SIZE]);
 
-
-// Place your function prototyes here.
+//Start of Main Function
 
 int main(void) {
     int minefield[SIZE][SIZE];
     initialise_field(minefield);
     printf("Welcome to minesweeper!\n");
-    printf("How many mines? ");
     //STAGE 01 Placing mines: Scan in the coordinates of mines and place them 
     //on the grid.
+    //user prompt to ask for the amount of mines
+    printf("How many mines? ");
     //Scan in the number of mines.
     int number_of_mines = 0;
     scanf("%d", &number_of_mines);
-    //user prompt
+    //user prompt to ask for the coordinates of the mines
     printf("Enter pairs:\n");
     
     //Scan in the coordinates of mines and place them on the grid.
     //accounts for too many mines
-    if (number_of_mines < (SIZE * SIZE)) {       
+    if (number_of_mines < (SIZE * SIZE)) {     
+        //The function below will actually place the mines in the minefield  
         place_mines(minefield, number_of_mines);        
-    }
-
-    //Counting mines for rows
-    int row_counter = 0;
-    int column_counter = 0;
-    int mines_in_row[SIZE] = {0};
-    while (row_counter < SIZE) {
-        while (column_counter < SIZE) {
-            if (minefield[row_counter][column_counter] == HIDDEN_MINE) {
-                mines_in_row[row_counter] ++;
-            }          
-            column_counter = column_counter + 1;         
-        }
-        row_counter = row_counter + 1;
-        column_counter = 0;
-    }
-    //Counting mines for columns
-    int row_counter1 = 0;
-    int column_counter1 = 0;
-    int mines_in_column[SIZE] = {0};
-    while (column_counter1 < SIZE) {
-        while (row_counter1 < SIZE) {
-            if (minefield[row_counter1][column_counter1] == HIDDEN_MINE) {
-                mines_in_column[column_counter1] ++;
-            }          
-            row_counter1 = row_counter1 + 1;         
-        }
-        column_counter1 = column_counter1 + 1;
-        row_counter1 = 0;
-    }
-
-    //printf("there are %d mines in row 2\n", mines_in_row[2]); 
-    
+    }   
+ 
     printf("Game Started\n");
     print_debug_minefield(minefield);
-
     // Scan in commands to play the game until the game ends.
-    // A game ends when the player wins, loses, or enters EOF (Ctrl+D).
-    // You should display the minefield after each command has been processed.
-    
+    // A game ends when the player wins, loses, or enters EOF (Ctrl+D).  
     int axis_to_look = 0;
     int command_type = 0;
     int game_stopper = 1;
@@ -143,25 +118,30 @@ int main(void) {
     int gameplay_toggle = 0;
     int toggle_off = 0;  
     int minesCounter = 0; 
+    int first_turn = 0;
     while (scanf("%d", &command_type) == 1 && game_stopper == 1) { 
         
         //STAGE 01 Counting Mines In A Row Or Column: when you enter the command
         //then the coordinates of the row or column to want to detect it will 
         //count how many mines in a row or column.
         if (command_type == DETECT_ROW) {
-            scanf("%d", &axis_to_look);  
+            scanf("%d", &axis_to_look); 
+            //The function below will count the mines in rows and state how
+            //many mines are in a particlar row.             
             hints_left = count_mines_row(
                 hints_left, 
-                mines_in_row, 
-                axis_to_look
+                axis_to_look,
+                minefield
             );                             
         }
         else if (command_type == DETECT_COL) {     
             scanf("%d", &axis_to_look);
+            //The function below will count the mines in columns and state how
+            //many mines are in a particlar column.
             hints_left = count_mines_col(
                 hints_left, 
-                mines_in_column, 
-                axis_to_look
+                axis_to_look,
+                minefield
             );                                         
         }
         
@@ -170,12 +150,15 @@ int main(void) {
         //mines in a size x size area.
         else if (command_type == DETECT_SQUARE) {
             mine_amount_square(minefield, hints_left);
+            // after this function runs a hint is used
             hints_left = hints_left - 1;          
         }       
         
         //STAGE 02 Reveal Square: when you enter the command then the 
         //coordinates of the square to want to detect it will follow one of the 
-        //4 options which are listed as 1. 2. 3. 4.        
+        //4 options which are listed as 1. 2. 3. 4.
+        //STAGE 04 REVEAL RADIAL: revealing a 3×3 square around the selected 
+        //square, an 8 pointed star-like shape is revealed outwards.         
         else if (
             command_type == REVEAL_SQUARE || 
             command_type == REVEAL_RADIAL
@@ -183,43 +166,59 @@ int main(void) {
             int rowToLook = 0;
             int colToLook = 0;
             scanf("%d %d", &rowToLook, &colToLook);
-            //1. & 2. & 3. are in the function below
-            minesCounter = revealSquare(
+            //1. & 2. & 3. are in the function below          
+            minesCounter = reveal(
                 minefield, 
                 rowToLook, 
                 colToLook, 
                 gameplay_toggle,
-                command_type
+                command_type,
+                first_turn
             );
+            //if the user used either reveal functions then the first_turn
+            //variable will no longer be 0.
+            first_turn++;
+            //if Game Over then the reveal function above will return the 
+            //variable minesCounter to have the value be -1. Which game_stopper
+            //will become -1 to identify the game was ended by losing.
             if (minesCounter == - 1) {
-                game_stopper = game_stopper - 2;  
+                game_stopper = game_stopper - 2;
             }                  
         }
             
-        //4. If there is no more HIDDEN_SAFE then game is won
-        //scans for HIDDEN_SAFE remaining
+        //4. If there is no more HIDDEN_SAFE then game is won:
+        //The function below scans for HIDDEN_SAFE remaining
         int safe_remaining = safe_left(minefield);
-        //stopping the game if no HIDDEN_SAFE left
+        //The if statment below will stop the game if no HIDDEN_SAFE left. Which
+        // the game_stopper variable will be 0 to signal the game ended by win.
         if (safe_remaining == 0) {
             printf("Game won!\n");
             game_stopper = game_stopper - 1;
         }
         
         //STAGE 03 Formatted Printing:    
-        //just changing minefield after command GAMEPLAY_MODE
+        //changing back the minefield after command GAMEPLAY_MODE
         if (command_type == DEBUG_MODE) {
             printf("Debug mode activated\n");
             toggle_off = 1;
+            //gameplay_toggle when 1 is GAMEPLAY_MODE and when 0 is DEBUG_MODE
             gameplay_toggle = gameplay_toggle - toggle_off;
+            //The function below changes back the values to be either 0, 1 or 2
             normal_revert(minefield);
             print_debug_minefield(minefield);
         }
-        
+        //the gameplay_toggle will keep the game running on GAMEPLAY_MODE. So
+        //the command_type == GAMEPLAY_MODE is for the first time entering 
+        //GAMEPLAY_MODE while gameplay_toggle is for allowing other commands to
+        //run while still in GAMEPLAY_MODE.
         else if (command_type == GAMEPLAY_MODE || gameplay_toggle == 1) { 
+            //only true for the first time entering this else if statment
             if (gameplay_toggle == 0) {
                 printf("Gameplay mode activated\n");
-            }           
+            }   
+            //The function below is the actual formatting        
             gameplay(minefield, game_stopper, minesCounter);
+            //gameplay_toggle will always be true until DEBUG_MODE is activated
             gameplay_toggle = 1;           
         }
         
@@ -252,7 +251,10 @@ void place_mines(int minefield[SIZE][SIZE], int number_of_mines) {
         }
         //accounts for vaild coordinates
         else if (mine_axis_y < SIZE && mine_axis_x < SIZE) {
-            actualPlacing(mine_axis_y, mine_axis_x, minefield);
+            //if valid then actually place the mines
+            if (mine_axis_y >= 0 && mine_axis_x >= 0 ) {
+                minefield[mine_axis_y][mine_axis_x] = HIDDEN_MINE;
+            }
             remaining_mines = remaining_mines - 1;
         }
         //accounts for other invaild coordinates
@@ -261,21 +263,31 @@ void place_mines(int minefield[SIZE][SIZE], int number_of_mines) {
         }
     } 
 }  
-//this function is part of the function above                       
-void actualPlacing(
-    int mine_axis_y, 
-    int mine_axis_x, 
-    int minefield[SIZE][SIZE]
-) {                
-    if (mine_axis_y >= 0 && mine_axis_x >= 0 ) {
-        minefield[mine_axis_y][mine_axis_x] = HIDDEN_MINE;
-    }
-}
+
 //STAGE 01 Counting Mines IN Rows: the actual printing out the statement part
-int count_mines_row(int hints_left, int mines_in_row[SIZE], int axis_to_look) {         
+int count_mines_row(
+    int hints_left, 
+    int axis_to_look, 
+    int minefield[SIZE][SIZE]
+) { 
+    //Counting mines in rows
+    int row_counter = 0;
+    int column_counter = 0;
+    int mines_in_row[SIZE] = {0};
+    while (row_counter < SIZE) {
+        while (column_counter < SIZE) {
+            if (minefield[row_counter][column_counter] == HIDDEN_MINE) {
+                mines_in_row[row_counter] ++;
+            }          
+            column_counter = column_counter + 1;         
+        }
+        row_counter = row_counter + 1;
+        column_counter = 0;
+    }       
     if (hints_left > 0) {
         printf("There are %d mine(s) ", mines_in_row[axis_to_look]);
         printf("in row %d\n", axis_to_look); 
+        // after this function runs a hint is used
         hints_left = hints_left - 1;
     }
     else if (hints_left <= 0) {
@@ -284,10 +296,29 @@ int count_mines_row(int hints_left, int mines_in_row[SIZE], int axis_to_look) {
     return hints_left;
 }  
 //STAGE 01 Counting Mines IN Columns: the actual printing out the statement part
-int count_mines_col(int hints_left, int mines_in_col[SIZE], int axis_to_look) {                 
+int count_mines_col(
+    int hints_left, 
+    int axis_to_look, 
+    int minefield[SIZE][SIZE]
+) { 
+    //Counting mines in columns
+    int row_counter1 = 0;
+    int column_counter1 = 0;
+    int mines_in_column[SIZE] = {0};
+    while (column_counter1 < SIZE) {
+        while (row_counter1 < SIZE) {
+            if (minefield[row_counter1][column_counter1] == HIDDEN_MINE) {
+                mines_in_column[column_counter1] ++;
+            }          
+            row_counter1 = row_counter1 + 1;         
+        }
+        column_counter1 = column_counter1 + 1;
+        row_counter1 = 0;
+    }                 
     if (hints_left > 0) {      
-        printf("There are %d mine(s) ", mines_in_col[axis_to_look]);
+        printf("There are %d mine(s) ", mines_in_column[axis_to_look]);
         printf("in column %d\n", axis_to_look);
+        // after this function runs a hint is used
         hints_left = hints_left - 1;
     }
     else if (hints_left <= 0) {
@@ -317,23 +348,29 @@ void mine_amount_square(int minefield[SIZE][SIZE], int hints_left) {
         printf("at row %d, column %d", rowToLook, colToLook);
         printf("of size %d\n", squareSize);
     }
+    //Won't print out the hint if the there are no more hints allowed
     else if (hints_left <= 0) {
         printf("Help already used\n");
     }   
 }
-         
+//Start of functions within stage 02 reveal---02--------------------------------  
+    
 //STAGE 02 Reveal Square: 1. no adjacent mines, then reveal all of its adjacent 
 //squares. 2. If input coordinate was mine then game over 3. reveal the input
 //coordinate if there is a mine adjacent to it
-int revealSquare(
+//STAGE 04 REVEAL RADIAL: revealing a 3×3 square around the selected 
+//square, an 8 pointed star-like shape is revealed outwards. 
+int reveal(
     int minefield[SIZE][SIZE], 
     int rowToLook, 
     int colToLook, 
     int gameplay_toggle,
-    int command_type
+    int command_type,
+    int first_turn
 ) {
-    //counts the amount of mines in a 3x3 square
     int squareSize = 3;
+    //The function below will counts the amount of mines in a 3x3 square as we
+    //give the squareSize to be 3.
     int minesCounter = minesInSquare(
         minefield, 
         rowToLook, 
@@ -342,8 +379,7 @@ int revealSquare(
     );
     
     //1. reveal whole square when there is no mines 
-    if (minesCounter == 0) {
-        //changing HIDDEN_SAFE to VISIBLE_SAFE
+    if (minesCounter == 0) {        
         int row_counter = 0;
         int column_counter = 0;
         //to specify where to start scanning
@@ -356,9 +392,9 @@ int revealSquare(
         row_stop = rowToLook + 1;
         col_stop = colToLook + 1;
         
-        //This section of accounting for when inputs are the same as the 
-        //function above but this is needed as for the actual revealing whole 
-        //square needs the bounds again.
+        //This section of accounting for when inputs are on the borders is the  
+        //same as the minesInSquare but this is needed again as for the actual 
+        //revealing whole square needs to be bounded again.
         if (command_type == REVEAL_SQUARE) {
             //accounting for when the inputs are on the corners!
             //top left bound 
@@ -400,10 +436,10 @@ int revealSquare(
             //Right bound
             else if (colToLook == (SIZE - 1)) { 
                 col_stop = colToLook;
-            } 
-        
-            //actual code that reveals the square (moved to a function as then there
-            //will be no need to reset the values for REVEAL_RADIAL
+            }         
+            //The function below is the actual code that reveals the square
+            //(moved to a function as then there will be no need to reset the 
+            //values for REVEAL_RADIAL)
             actual_reveal_square(
                 row_counter, 
                 row_stop, 
@@ -413,36 +449,50 @@ int revealSquare(
                 squareSize, 
                 gameplay_toggle, 
                 col_restart
-            ); 
-        }
+            );             
+        }       
         
         //STAGE 04 REVEAL RADIAL: revealing a 3×3 square around the selected 
         //square, an 8 pointed star-like shape is revealed outwards.        
         if (command_type == REVEAL_RADIAL) {            
             reveal_redial(row_counter, column_counter, minefield, squareSize);
-        }
-    }
-    //2. If input coordinate was mine then game over    
+        }              
+    }        
+    //2. If input coordinate was a mine then game over    
     else if (minefield[rowToLook][colToLook] == HIDDEN_MINE) {
-        printf("Game over\n");
-        minesCounter = -1;
-    }
-    //3. reveal the input coordinate if there is a mine adjacent to it
-    //if there adjacent mines to the user input, then display the number of 
+        if (first_turn != 0) {
+            printf("Game over\n");
+            minesCounter = - 1;
+        }
+        //STAGE 04 Safe First Turn:
+        else if (first_turn == 0) {
+            //The function below will shift the whole minefield down by one
+            //while warpping the last row to the top.
+            safe_first(minesCounter, minefield);
+            //Reveals the user to be safe after the minefield has been shifted
+            //down.
+            minefield[rowToLook][colToLook] = VISIBLE_SAFE;
+        }
+    }   
+       
+    //If there is adjacent mines to the user input, then display the number of 
     //mines adjacent to that coordinate.
     else if (minesCounter != 0 && gameplay_toggle == 1) {
         minefield[rowToLook][colToLook] = minesCounter;
+        //Setting the amount of mines nearby (for 1 and 2) to be a negative 
+        //number so the Gameplay mode can tell difference between the amount 
+        //of mines nearby and VISIBLE_SAFE & HIDDEN_MINE 
         if (minesCounter == 1) {
-            minefield[rowToLook][colToLook] = -1;
+            minefield[rowToLook][colToLook] = - 1;
         }
         else if (minesCounter == 2) {
-            minefield[rowToLook][colToLook] = -2;
+            minefield[rowToLook][colToLook] = - 2;
         }
     } 
+    //3. reveal the input coordinate if there is a mine adjacent to it.
     else if (minesCounter != 0 && gameplay_toggle != 1) {
         minefield[rowToLook][colToLook] = VISIBLE_SAFE;
-    }
-    
+    }   
             
     return minesCounter;    
 } 
@@ -509,9 +559,8 @@ int minesInSquare(
     //Right bound
     else if (colToLook == (SIZE - (squareSize / 2))) { 
         col_stop = colToLook;
-    }              
-    //this is the same as Detect Square but it will only count mines in size 3                
-    //actucal counting of mines in a square 
+    }                             
+    //The actucal counting of mines in a square 
     int minesCounter = 0;
     while (row_counter <= row_stop) {
         while (column_counter <= col_stop) {
@@ -540,6 +589,7 @@ void actual_reveal_square(
     while (row_counter <= row_stop) {
         while (column_counter <= col_stop) {
             minefield[row_counter][column_counter] = VISIBLE_SAFE; 
+            //The function below will only run if it is in gameplay mode
             mines_adjacent(
                 minefield, 
                 row_counter, 
@@ -553,7 +603,7 @@ void actual_reveal_square(
         column_counter = col_restart;
     }
 }            
-//STAGE 03 shows the number of adjacent mines (inside stage 02 reveal square)              
+//STAGE 03 shows the number of adjacent mines               
 void mines_adjacent(
     int minefield[SIZE][SIZE], 
     int row_counter, 
@@ -562,13 +612,18 @@ void mines_adjacent(
     int gameplay_toggle
 ) {
     if (gameplay_toggle == 1) {
+        //The function below will count the amount of mines in a 3x3 square
         int mines_adjacent = minesInSquare(
             minefield, 
             row_counter, 
             column_counter, 
             squareSize
         );
+        //displaying the number of mines near that particular coordinate
         minefield[row_counter][column_counter] = mines_adjacent;
+        //Setting the amount of mines nearby (for 1 and 2) to be a negative 
+        //number so the Gameplay mode can tell difference between the amount 
+        //of mines nearby and VISIBLE_SAFE & HIDDEN_MINE 
         if (mines_adjacent == 1) {
             minefield[row_counter][column_counter] = -1;
         }
@@ -583,7 +638,8 @@ int safe_left(int minefield[SIZE][SIZE]) {
     int row_counter = 0;
     int column_counter = 0;
     int safe_remaining = 0;
-    // scanning if there are safe spots left
+    // scanning if there are safe spots left, so there is none then 
+    //safe_remaining will be 0.
     while (row_counter < SIZE) {
         while (column_counter < SIZE) {           
             if (minefield[row_counter][column_counter] == HIDDEN_SAFE) {
@@ -603,16 +659,22 @@ void reveal_redial(
     int column_counter, 
     int minefield[SIZE][SIZE], 
     int squareSize
-) {         
-    //spike coming out of the top left corner
+) {            
     int mines_nearby = 0;
+    //The two lines below is for repositioning the counters to be back at the 
+    //center as it was off by 1 up and 1 left to scan a square.
     int intial_row = row_counter + 1;
-    int intial_col = column_counter + 1;            
+    int intial_col = column_counter + 1; 
+    //The two lines below is to reset the counters each time           
     row_counter = intial_row;
-    column_counter = intial_col;           
+    column_counter = intial_col;       
+    //spike coming out of the top left corner
+    //when there is no mines in a 3x3 square then continue to spread    
     while (mines_nearby == 0) {
+        //limits for when it spreads to the borders
         if (row_counter >= 0 && column_counter >= 0) {
             minefield[row_counter][column_counter] = VISIBLE_SAFE;
+            //scaning in a 3x3 sqaure to see if there are mines nearby
             mines_nearby = minesInSquare(
             minefield, 
             row_counter, 
@@ -622,6 +684,7 @@ void reveal_redial(
             row_counter = row_counter - 1;
             column_counter = column_counter - 1;
         }
+        //exiting the loop
         else {
             mines_nearby = 1;
         }               
@@ -764,7 +827,42 @@ void reveal_redial(
     }                                    
 }
 
-//End of stage 02 functions^^^^^^^^^^^^^^^^^^^02^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+void safe_first(int minesCounter, int minefield[SIZE][SIZE]) {
+    //keep shifting until there is no mine on the user input
+    int loop_stopper = 0;
+    while (minesCounter != 0 && loop_stopper != 1) {
+        //storing the last row of the minefield
+        int col_number = 0;
+        int last_row[SIZE] = {0};
+        while (col_number < SIZE) {
+            last_row[col_number] = minefield[SIZE - 1][col_number];
+            col_number++;              
+        }
+        //overwriting remaining rows of the minefield to shift it one row down.
+        int row_receive = 2;
+        int row_give = 1;
+        while (row_give <= (SIZE - 1)) {                
+            col_number = 0;
+            while (col_number < SIZE) {
+                minefield[SIZE - row_give][col_number] = 
+                minefield[SIZE - row_receive][col_number];
+                col_number++;              
+            }
+            row_receive++;
+            row_give++;
+        }
+        //replacing the previous last row to become the first row
+        col_number = 0;
+        while (col_number < SIZE) {
+            minefield[0][col_number] = last_row[col_number];
+            col_number++;              
+        }
+        loop_stopper++;
+    }
+}
+
+//End of functions within stage 02 reveal ^^^^02^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//End of STAGE 02 functions^^^^^^^^^^^^^^^^^^^02^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 //STAGE 03 functions--------------------------03--------------------------------
 //STAGE 03 Formatted Printing:
@@ -773,6 +871,8 @@ void gameplay(
     int game_stopper, 
     int minesCounter
 ) {
+    //shows the state of the game with a happy face when the user is alive and a
+    //and a dead face when the user lost (aka dead).
     if (game_stopper >= 0) {
         printf("..\n");
         printf("\\/\n");
@@ -781,7 +881,7 @@ void gameplay(
         printf("XX\n");
         printf("/\\\n");
     }
-    
+    //Printing out the format
     printf("    00 01 02 03 04 05 06 07\n");
     printf("   -------------------------\n");
     int row_counter = 0;
@@ -825,7 +925,7 @@ void gameplay(
     printf("   -------------------------\n");
    
 }
-//STAGE 03 DEBUG_MODE; changing back values to normal
+//STAGE 03 DEBUG_MODE; changing back values to normal(0, 1, 2)
 void normal_revert(int minefield[SIZE][SIZE]) {
     int row_counter = 0;
     int column_counter = 0;

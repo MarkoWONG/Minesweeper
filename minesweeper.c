@@ -470,8 +470,14 @@ int reveal(
             //while warpping the last row to the top.
             safe_first(minesCounter, minefield);
             //Reveals the user to be safe after the minefield has been shifted
-            //down.
-            minefield[rowToLook][colToLook] = VISIBLE_SAFE;
+            //down and depending on the gamemode it will tell the user how many  
+            //mines are near but needs to be a negative number explained below.
+            if (gameplay_toggle == 1) {
+                minefield[rowToLook][colToLook] = minesCounter * -1;  
+            }
+            else {
+                minefield[rowToLook][colToLook] = VISIBLE_SAFE;
+            }                                               
         }
     }   
        

@@ -66,6 +66,12 @@ void mines_adjacent(int minefield[SIZE][SIZE],
     int squareSize, 
     int gameplay_toggle
 );
+void reveal_redial(
+    int row_counter, 
+    int column_counter, 
+    int minefield[SIZE][SIZE], 
+    int squareSize
+);
 int safe_left(int minefield[SIZE][SIZE]);
 void gameplay(int minefield[SIZE][SIZE], int game_stopper, int minesCounter);
 void normal_revert(int minefield[SIZE][SIZE]);
@@ -411,168 +417,10 @@ int revealSquare(
         }
         
         //STAGE 04 REVEAL RADIAL: revealing a 3×3 square around the selected 
-        //square, an 8 pointed star-like shape is revealed outwards. 
+        //square, an 8 pointed star-like shape is revealed outwards.        
         if (command_type == REVEAL_RADIAL) {            
-            //spike coming out of the top left corner
-            int mines_nearby = 0;
-            int intial_row = row_counter + 1;
-            int intial_col = column_counter + 1;            
-            row_counter = intial_row;
-            column_counter = intial_col;           
-            while (mines_nearby == 0) {
-                if (row_counter >= 0 && column_counter >= 0) {
-                    minefield[row_counter][column_counter] = VISIBLE_SAFE;
-                    mines_nearby = minesInSquare(
-                    minefield, 
-                    row_counter, 
-                    column_counter, 
-                    squareSize
-                    );
-                    row_counter = row_counter - 1;
-                    column_counter = column_counter - 1;
-                }
-                else {
-                    mines_nearby = 1;
-                }               
-            }             
-            //spike on top middle
-            mines_nearby = 0;
-            row_counter = intial_row;
-            column_counter = intial_col;
-            while (mines_nearby == 0) {
-                if (row_counter >= 0) {
-                    minefield[row_counter][column_counter] = VISIBLE_SAFE;
-                    mines_nearby = minesInSquare(
-                        minefield, 
-                        row_counter, 
-                         column_counter, 
-                         squareSize
-                    );
-                    row_counter = row_counter - 1;
-                }
-                else {
-                    mines_nearby = 1;
-                }               
-            }            
-            //spike on top right corner
-            mines_nearby = 0;
-            row_counter = intial_row;
-            column_counter = intial_col;        
-            while (mines_nearby == 0) {
-                if (row_counter >= 0 && column_counter <= (SIZE - 1)) {
-                    minefield[row_counter][column_counter] = VISIBLE_SAFE;
-                    mines_nearby = minesInSquare(
-                        minefield, 
-                        row_counter, 
-                        column_counter, 
-                        squareSize
-                    );
-                    row_counter = row_counter - 1;
-                    column_counter = column_counter + 1;
-                }
-                else {
-                    mines_nearby = 1;
-                }               
-            }             
-            //spike on right middle
-            mines_nearby = 0;
-            row_counter = intial_row;
-            column_counter = intial_col;
-            while (mines_nearby == 0) {
-                if (column_counter <= (SIZE - 1)) {
-                    minefield[row_counter][column_counter] = VISIBLE_SAFE;
-                    mines_nearby = minesInSquare(
-                        minefield, 
-                        row_counter, 
-                        column_counter, 
-                        squareSize
-                    );
-                    column_counter = column_counter + 1;
-                }
-                else {
-                    mines_nearby = 1;
-                }               
-            }           
-            //spike on bottom right
-            mines_nearby = 0;
-            row_counter = intial_row;
-            column_counter = intial_col;
-            while (mines_nearby == 0) {
-                if (row_counter <= (SIZE - 1) && column_counter <= (SIZE - 1)) {
-                    minefield[row_counter][column_counter] = VISIBLE_SAFE;
-                    mines_nearby = minesInSquare(
-                        minefield, 
-                        row_counter, 
-                        column_counter, 
-                        squareSize
-                    );
-                    row_counter = row_counter + 1;
-                    column_counter = column_counter + 1;
-                }
-                else {
-                    mines_nearby = 1;
-                }               
-            }             
-            //spike on bottom middle
-            mines_nearby = 0;
-            row_counter = intial_row;
-            column_counter = intial_col;
-            while (mines_nearby == 0) {
-                if (row_counter <= (SIZE - 1)) {
-                    minefield[row_counter][column_counter] = VISIBLE_SAFE;
-                    mines_nearby = minesInSquare(
-                        minefield, 
-                        row_counter, 
-                        column_counter, 
-                        squareSize
-                    );
-                    row_counter = row_counter + 1;
-                }
-                else {
-                    mines_nearby = 1;
-                }               
-            }            
-            //spike on bottom left           
-            mines_nearby = 0;
-            row_counter = intial_row;
-            column_counter = intial_col;
-            while (mines_nearby == 0) {
-                if (row_counter <= (SIZE - 1) && column_counter >= 0) {
-                    minefield[row_counter][column_counter] = VISIBLE_SAFE;
-                    mines_nearby = minesInSquare(
-                        minefield, 
-                        row_counter, 
-                        column_counter, 
-                        squareSize
-                    );
-                    row_counter = row_counter + 1;
-                    column_counter = column_counter - 1;
-                }
-                else {
-                    mines_nearby = 1;
-                }               
-            }              
-            //spike on left middle            
-            mines_nearby = 0;
-            row_counter = intial_row;
-            column_counter = intial_col;
-            while (mines_nearby == 0) {
-                if (column_counter >= 0) {                   
-                    minefield[row_counter][column_counter] = VISIBLE_SAFE;
-                    mines_nearby = minesInSquare(
-                        minefield, 
-                        row_counter, 
-                        column_counter, 
-                        squareSize
-                    );
-                    column_counter = column_counter - 1;
-                }
-                else {
-                    mines_nearby = 1;
-                }               
-            }                    
+            reveal_redial(row_counter, column_counter, minefield, squareSize);
         }
-            
     }
     //2. If input coordinate was mine then game over    
     else if (minefield[rowToLook][colToLook] == HIDDEN_MINE) {
@@ -662,7 +510,7 @@ int minesInSquare(
     else if (colToLook == (SIZE - (squareSize / 2))) { 
         col_stop = colToLook;
     }              
-    //this is the same as Detect Square but it will only count mines in size 3                 ***
+    //this is the same as Detect Square but it will only count mines in size 3                
     //actucal counting of mines in a square 
     int minesCounter = 0;
     while (row_counter <= row_stop) {
@@ -748,6 +596,174 @@ int safe_left(int minefield[SIZE][SIZE]) {
     }
     return safe_remaining;   
 }
+//STAGE 04 REVEAL RADIAL: revealing a 3×3 square around the selected 
+//square, an 8 pointed star-like shape is revealed outwards. 
+void reveal_redial(
+    int row_counter, 
+    int column_counter, 
+    int minefield[SIZE][SIZE], 
+    int squareSize
+) {         
+    //spike coming out of the top left corner
+    int mines_nearby = 0;
+    int intial_row = row_counter + 1;
+    int intial_col = column_counter + 1;            
+    row_counter = intial_row;
+    column_counter = intial_col;           
+    while (mines_nearby == 0) {
+        if (row_counter >= 0 && column_counter >= 0) {
+            minefield[row_counter][column_counter] = VISIBLE_SAFE;
+            mines_nearby = minesInSquare(
+            minefield, 
+            row_counter, 
+            column_counter, 
+            squareSize
+            );
+            row_counter = row_counter - 1;
+            column_counter = column_counter - 1;
+        }
+        else {
+            mines_nearby = 1;
+        }               
+    }             
+    //spike on top middle
+    mines_nearby = 0;
+    row_counter = intial_row;
+    column_counter = intial_col;
+    while (mines_nearby == 0) {
+        if (row_counter >= 0) {
+            minefield[row_counter][column_counter] = VISIBLE_SAFE;
+            mines_nearby = minesInSquare(
+                minefield, 
+                row_counter, 
+                column_counter, 
+                squareSize
+            );
+            row_counter = row_counter - 1;
+        }
+        else {
+            mines_nearby = 1;
+        }               
+    }            
+    //spike on top right corner
+    mines_nearby = 0;
+    row_counter = intial_row;
+    column_counter = intial_col;        
+    while (mines_nearby == 0) {
+        if (row_counter >= 0 && column_counter <= (SIZE - 1)) {
+            minefield[row_counter][column_counter] = VISIBLE_SAFE;
+            mines_nearby = minesInSquare(
+                minefield, 
+                row_counter, 
+                column_counter, 
+                squareSize
+            );
+            row_counter = row_counter - 1;
+            column_counter = column_counter + 1;
+        }
+        else {
+            mines_nearby = 1;
+        }               
+    }             
+    //spike on right middle
+    mines_nearby = 0;
+    row_counter = intial_row;
+    column_counter = intial_col;
+    while (mines_nearby == 0) {
+        if (column_counter <= (SIZE - 1)) {
+            minefield[row_counter][column_counter] = VISIBLE_SAFE;
+            mines_nearby = minesInSquare(
+                minefield, 
+                row_counter, 
+                column_counter, 
+                squareSize
+            );
+            column_counter = column_counter + 1;
+        }
+        else {
+            mines_nearby = 1;
+        }               
+    }           
+    //spike on bottom right
+    mines_nearby = 0;
+    row_counter = intial_row;
+    column_counter = intial_col;
+    while (mines_nearby == 0) {
+        if (row_counter <= (SIZE - 1) && column_counter <= (SIZE - 1)) {
+            minefield[row_counter][column_counter] = VISIBLE_SAFE;
+            mines_nearby = minesInSquare(
+                minefield, 
+                row_counter, 
+                column_counter, 
+                squareSize
+            );
+            row_counter = row_counter + 1;
+            column_counter = column_counter + 1;
+        }
+        else {
+            mines_nearby = 1;
+        }               
+    }             
+    //spike on bottom middle
+    mines_nearby = 0;
+    row_counter = intial_row;
+    column_counter = intial_col;
+    while (mines_nearby == 0) {
+        if (row_counter <= (SIZE - 1)) {
+            minefield[row_counter][column_counter] = VISIBLE_SAFE;
+            mines_nearby = minesInSquare(
+                minefield, 
+                row_counter, 
+                column_counter, 
+                squareSize
+            );
+            row_counter = row_counter + 1;
+        }
+        else {
+            mines_nearby = 1;
+        }               
+    }            
+    //spike on bottom left           
+    mines_nearby = 0;
+    row_counter = intial_row;
+    column_counter = intial_col;
+    while (mines_nearby == 0) {
+        if (row_counter <= (SIZE - 1) && column_counter >= 0) {
+            minefield[row_counter][column_counter] = VISIBLE_SAFE;
+            mines_nearby = minesInSquare(
+              minefield, 
+              row_counter, 
+              column_counter, 
+              squareSize
+            );
+            row_counter = row_counter + 1;
+            column_counter = column_counter - 1;
+        }
+        else {
+            mines_nearby = 1;
+        }               
+    }              
+    //spike on left middle            
+    mines_nearby = 0;
+    row_counter = intial_row;
+    column_counter = intial_col;
+    while (mines_nearby == 0) {
+        if (column_counter >= 0) {                   
+            minefield[row_counter][column_counter] = VISIBLE_SAFE;
+            mines_nearby = minesInSquare(
+                minefield, 
+                row_counter, 
+                column_counter, 
+                squareSize
+            );
+            column_counter = column_counter - 1;
+        }
+        else {
+            mines_nearby = 1;
+        }               
+    }                                    
+}
+
 //End of stage 02 functions^^^^^^^^^^^^^^^^^^^02^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 //STAGE 03 functions--------------------------03--------------------------------

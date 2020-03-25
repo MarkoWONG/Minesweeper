@@ -77,7 +77,15 @@ void reveal_redial(
     int row_counter, 
     int column_counter, 
     int minefield[SIZE][SIZE], 
-    int squareSize
+    int squareSize,
+    int gameplay_toggle
+);
+void reveal_redial_game(
+    int gameplay_toggle, 
+    int mines_nearby, 
+    int row_counter,
+    int column_counter, 
+    int minefield[SIZE][SIZE]
 );
 int safe_left(int minefield[SIZE][SIZE]);
 void safe_first(int minesCounter, int minefield[SIZE][SIZE]);
@@ -345,7 +353,7 @@ void mine_amount_square(int minefield[SIZE][SIZE], int hints_left) {
     );
     if (hints_left > 0) {
         printf("There are %d mine(s) in the square centered ", minesCounter);
-        printf("at row %d, column %d", rowToLook, colToLook);
+        printf("at row %d, column %d ", rowToLook, colToLook);
         printf("of size %d\n", squareSize);
     }
     //Won't print out the hint if the there are no more hints allowed
@@ -455,7 +463,13 @@ int reveal(
         //STAGE 04 REVEAL RADIAL: revealing a 3×3 square around the selected 
         //square, an 8 pointed star-like shape is revealed outwards.        
         if (command_type == REVEAL_RADIAL) {            
-            reveal_redial(row_counter, column_counter, minefield, squareSize);
+            reveal_redial(
+                row_counter, 
+                column_counter, 
+                minefield, 
+                squareSize, 
+                gameplay_toggle
+            );
         }              
     }        
     //2. If input coordinate was a mine then game over    
@@ -664,7 +678,8 @@ void reveal_redial(
     int row_counter, 
     int column_counter, 
     int minefield[SIZE][SIZE], 
-    int squareSize
+    int squareSize,
+    int gameplay_toggle
 ) {            
     int mines_nearby = 0;
     //The two lines below is for repositioning the counters to be back at the 
@@ -678,8 +693,7 @@ void reveal_redial(
     //when there is no mines in a 3x3 square then continue to spread    
     while (mines_nearby == 0) {
         //limits for when it spreads to the borders
-        if (row_counter >= 0 && column_counter >= 0) {
-            minefield[row_counter][column_counter] = VISIBLE_SAFE;
+        if (row_counter >= 0 && column_counter >= 0) {            
             //scaning in a 3x3 sqaure to see if there are mines nearby
             mines_nearby = minesInSquare(
             minefield, 
@@ -687,11 +701,22 @@ void reveal_redial(
             column_counter, 
             squareSize
             );
+            minefield[row_counter][column_counter] = VISIBLE_SAFE;
+            //The function below reveal the amount of mines nearby where the 
+            //spikes stop while in gameplay mode.
+            reveal_redial_game(
+                gameplay_toggle, 
+                mines_nearby, 
+                row_counter, 
+                column_counter, 
+                minefield
+            ); 
+            //the spreading out of the spike
             row_counter = row_counter - 1;
             column_counter = column_counter - 1;
         }
         //exiting the loop
-        else {
+        else {          
             mines_nearby = 1;
         }               
     }             
@@ -700,33 +725,48 @@ void reveal_redial(
     row_counter = intial_row;
     column_counter = intial_col;
     while (mines_nearby == 0) {
-        if (row_counter >= 0) {
-            minefield[row_counter][column_counter] = VISIBLE_SAFE;
+        if (row_counter >= 0) {           
             mines_nearby = minesInSquare(
                 minefield, 
                 row_counter, 
                 column_counter, 
                 squareSize
             );
+            minefield[row_counter][column_counter] = VISIBLE_SAFE;
+            reveal_redial_game(
+                gameplay_toggle, 
+                mines_nearby, 
+                row_counter, 
+                column_counter, 
+                minefield
+            ); 
             row_counter = row_counter - 1;
         }
         else {
             mines_nearby = 1;
         }               
-    }            
+    }
+              
     //spike on top right corner
     mines_nearby = 0;
     row_counter = intial_row;
     column_counter = intial_col;        
     while (mines_nearby == 0) {
         if (row_counter >= 0 && column_counter <= (SIZE - 1)) {
-            minefield[row_counter][column_counter] = VISIBLE_SAFE;
             mines_nearby = minesInSquare(
                 minefield, 
                 row_counter, 
                 column_counter, 
                 squareSize
             );
+            minefield[row_counter][column_counter] = VISIBLE_SAFE;
+            reveal_redial_game(
+                gameplay_toggle, 
+                mines_nearby, 
+                row_counter, 
+                column_counter, 
+                minefield
+            ); 
             row_counter = row_counter - 1;
             column_counter = column_counter + 1;
         }
@@ -740,13 +780,20 @@ void reveal_redial(
     column_counter = intial_col;
     while (mines_nearby == 0) {
         if (column_counter <= (SIZE - 1)) {
-            minefield[row_counter][column_counter] = VISIBLE_SAFE;
             mines_nearby = minesInSquare(
                 minefield, 
                 row_counter, 
                 column_counter, 
                 squareSize
             );
+            minefield[row_counter][column_counter] = VISIBLE_SAFE;
+            reveal_redial_game(
+                gameplay_toggle, 
+                mines_nearby, 
+                row_counter, 
+                column_counter, 
+                minefield
+            ); 
             column_counter = column_counter + 1;
         }
         else {
@@ -759,13 +806,20 @@ void reveal_redial(
     column_counter = intial_col;
     while (mines_nearby == 0) {
         if (row_counter <= (SIZE - 1) && column_counter <= (SIZE - 1)) {
-            minefield[row_counter][column_counter] = VISIBLE_SAFE;
             mines_nearby = minesInSquare(
                 minefield, 
                 row_counter, 
                 column_counter, 
                 squareSize
             );
+            minefield[row_counter][column_counter] = VISIBLE_SAFE;
+            reveal_redial_game(
+                gameplay_toggle, 
+                mines_nearby, 
+                row_counter, 
+                column_counter, 
+                minefield
+            ); 
             row_counter = row_counter + 1;
             column_counter = column_counter + 1;
         }
@@ -779,13 +833,20 @@ void reveal_redial(
     column_counter = intial_col;
     while (mines_nearby == 0) {
         if (row_counter <= (SIZE - 1)) {
-            minefield[row_counter][column_counter] = VISIBLE_SAFE;
             mines_nearby = minesInSquare(
                 minefield, 
                 row_counter, 
                 column_counter, 
                 squareSize
             );
+            minefield[row_counter][column_counter] = VISIBLE_SAFE;
+            reveal_redial_game(
+                gameplay_toggle, 
+                mines_nearby, 
+                row_counter, 
+                column_counter, 
+                minefield
+            ); 
             row_counter = row_counter + 1;
         }
         else {
@@ -798,13 +859,20 @@ void reveal_redial(
     column_counter = intial_col;
     while (mines_nearby == 0) {
         if (row_counter <= (SIZE - 1) && column_counter >= 0) {
-            minefield[row_counter][column_counter] = VISIBLE_SAFE;
             mines_nearby = minesInSquare(
               minefield, 
               row_counter, 
               column_counter, 
               squareSize
             );
+            minefield[row_counter][column_counter] = VISIBLE_SAFE;
+            reveal_redial_game(
+                gameplay_toggle, 
+                mines_nearby, 
+                row_counter, 
+                column_counter, 
+                minefield
+            ); 
             row_counter = row_counter + 1;
             column_counter = column_counter - 1;
         }
@@ -818,19 +886,44 @@ void reveal_redial(
     column_counter = intial_col;
     while (mines_nearby == 0) {
         if (column_counter >= 0) {                   
-            minefield[row_counter][column_counter] = VISIBLE_SAFE;
             mines_nearby = minesInSquare(
                 minefield, 
                 row_counter, 
                 column_counter, 
                 squareSize
             );
+            minefield[row_counter][column_counter] = VISIBLE_SAFE;
+            reveal_redial_game(
+                gameplay_toggle, 
+                mines_nearby, 
+                row_counter, 
+                column_counter, 
+                minefield
+            ); 
             column_counter = column_counter - 1;
         }
         else {
             mines_nearby = 1;
         }               
-    }                                    
+    }                                   
+}
+//When in gamplay mode reveal redial will reveal the amount of mines nearby 
+//where the spikes stop.
+void reveal_redial_game(
+    int gameplay_toggle, 
+    int mines_nearby, 
+    int row_counter,
+    int column_counter, 
+    int minefield[SIZE][SIZE]
+) {
+    if (gameplay_toggle == 1) {
+        if (mines_nearby == 1 || mines_nearby == 2) {
+            minefield[row_counter][column_counter] = mines_nearby * -1;
+        }
+        else if (mines_nearby > 3) {
+            minefield[row_counter][column_counter] = mines_nearby;
+        }
+    } 
 }
 
 void safe_first(int minesCounter, int minefield[SIZE][SIZE]) {

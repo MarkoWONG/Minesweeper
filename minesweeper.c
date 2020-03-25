@@ -353,60 +353,62 @@ int revealSquare(
         //This section of accounting for when inputs are the same as the 
         //function above but this is needed as for the actual revealing whole 
         //square needs the bounds again.
-        //accounting for when the inputs are on the corners!
-        //top left bound 
-        if (rowToLook == 0 && colToLook == 0) { 
-            row_counter = rowToLook;
-            column_counter = colToLook;
-            col_restart = 0;
-        }
-        //bottom right bound
-        else if (rowToLook == (SIZE - 1) && colToLook == (SIZE - 1)) {
-            row_stop = rowToLook;
-            col_stop = colToLook;
-        }
-        //top right bound
-        else if (rowToLook == 0 && colToLook == (SIZE - 1)) {
-            row_counter = rowToLook;
-            col_stop = colToLook;
-        }
-        //bottom left bound
-        else if (rowToLook == (SIZE - 1) && colToLook == 0) {
-            column_counter = colToLook;
-            col_restart = 0; 
-            row_stop = rowToLook;
-        }   
-        //accounting for when the inputs are on the edge (not corners!)
-        //top bound
-        else if (rowToLook == 0) { 
-            row_counter = rowToLook;                
-        }
-        //bottom bound
-        else if (rowToLook == (SIZE - 1)) {
-            row_stop = rowToLook;
-        }
-        //left bound 
-        else if (colToLook == 0) { 
-            column_counter = 0;
-            col_restart = 0;       
-        }
-        //Right bound
-        else if (colToLook == (SIZE - 1)) { 
-            col_stop = colToLook;
-        } 
+        if (command_type == REVEAL_SQUARE) {
+            //accounting for when the inputs are on the corners!
+            //top left bound 
+            if (rowToLook == 0 && colToLook == 0) { 
+                row_counter = rowToLook;
+                column_counter = colToLook;
+                col_restart = 0;
+            }
+            //bottom right bound
+            else if (rowToLook == (SIZE - 1) && colToLook == (SIZE - 1)) {
+                row_stop = rowToLook;
+                col_stop = colToLook;
+            }
+            //top right bound
+            else if (rowToLook == 0 && colToLook == (SIZE - 1)) {
+                row_counter = rowToLook;
+                col_stop = colToLook;
+            }
+            //bottom left bound
+            else if (rowToLook == (SIZE - 1) && colToLook == 0) {
+                column_counter = colToLook;
+                col_restart = 0; 
+                row_stop = rowToLook;
+            }   
+            //accounting for when the inputs are on the edge (not corners!)
+            //top bound
+            else if (rowToLook == 0) { 
+                row_counter = rowToLook;                
+            }
+            //bottom bound
+            else if (rowToLook == (SIZE - 1)) {
+                row_stop = rowToLook;
+            }
+            //left bound 
+            else if (colToLook == 0) { 
+                column_counter = 0;
+                col_restart = 0;       
+            }
+            //Right bound
+            else if (colToLook == (SIZE - 1)) { 
+                col_stop = colToLook;
+            } 
         
-        //actual code that reveals the square (moved to a function as then there
-        //will be no need to reset the values for REVEAL_RADIAL
-        actual_reveal_square(
-            row_counter, 
-            row_stop, 
-            column_counter, 
-            col_stop, 
-            minefield,
-            squareSize, 
-            gameplay_toggle, 
-            col_restart
-        ); 
+            //actual code that reveals the square (moved to a function as then there
+            //will be no need to reset the values for REVEAL_RADIAL
+            actual_reveal_square(
+                row_counter, 
+                row_stop, 
+                column_counter, 
+                col_stop, 
+                minefield,
+                squareSize, 
+                gameplay_toggle, 
+                col_restart
+            ); 
+        }
         
         //STAGE 04 REVEAL RADIAL: revealing a 3×3 square around the selected 
         //square, an 8 pointed star-like shape is revealed outwards. 
@@ -416,178 +418,160 @@ int revealSquare(
             int intial_row = row_counter + 1;
             int intial_col = column_counter + 1;            
             row_counter = intial_row;
-            column_counter = intial_col;   
-            if (column_counter != 0 || row_counter != 0) {         
-                while (mines_nearby == 0) {
-                    if (row_counter > 0 && column_counter > 0) {
-                        row_counter = row_counter - 1;
-                        column_counter = column_counter - 1;
-                        minefield[row_counter][column_counter] = VISIBLE_SAFE;
-                        mines_nearby = minesInSquare(
-                            minefield, 
-                            row_counter, 
-                            column_counter, 
-                            squareSize
-                        );
-                    }
-                    else {
-                        mines_nearby = 1;
-                    }               
+            column_counter = intial_col;           
+            while (mines_nearby == 0) {
+                if (row_counter >= 0 && column_counter >= 0) {
+                    minefield[row_counter][column_counter] = VISIBLE_SAFE;
+                    mines_nearby = minesInSquare(
+                    minefield, 
+                    row_counter, 
+                    column_counter, 
+                    squareSize
+                    );
+                    row_counter = row_counter - 1;
+                    column_counter = column_counter - 1;
                 }
-            } 
+                else {
+                    mines_nearby = 1;
+                }               
+            }             
             //spike on top middle
             mines_nearby = 0;
             row_counter = intial_row;
             column_counter = intial_col;
-            if (row_counter != 0) {
-                while (mines_nearby == 0) {
-                    if (row_counter > 0) {
-                        row_counter = row_counter - 1;
-                        minefield[row_counter][column_counter] = VISIBLE_SAFE;
-                        mines_nearby = minesInSquare(
-                            minefield, 
-                            row_counter, 
-                            column_counter, 
-                            squareSize
-                        );
-                    }
-                    else {
-                        mines_nearby = 1;
-                    }               
+            while (mines_nearby == 0) {
+                if (row_counter >= 0) {
+                    minefield[row_counter][column_counter] = VISIBLE_SAFE;
+                    mines_nearby = minesInSquare(
+                        minefield, 
+                        row_counter, 
+                         column_counter, 
+                         squareSize
+                    );
+                    row_counter = row_counter - 1;
                 }
-            }
+                else {
+                    mines_nearby = 1;
+                }               
+            }            
             //spike on top right corner
             mines_nearby = 0;
             row_counter = intial_row;
-            column_counter = intial_col;
-            if (column_counter != (SIZE - 1) || row_counter != 0) {
-                while (mines_nearby == 0) {
-                    if (row_counter > 0 && column_counter < (SIZE - 1)) {
-                        row_counter = row_counter - 1;
-                        column_counter = column_counter + 1;
-                        minefield[row_counter][column_counter] = VISIBLE_SAFE;
-                        mines_nearby = minesInSquare(
-                            minefield, 
-                            row_counter, 
-                            column_counter, 
-                            squareSize
-                        );
-                    }
-                    else {
-                        mines_nearby = 1;
-                    }               
+            column_counter = intial_col;        
+            while (mines_nearby == 0) {
+                if (row_counter >= 0 && column_counter <= (SIZE - 1)) {
+                    minefield[row_counter][column_counter] = VISIBLE_SAFE;
+                    mines_nearby = minesInSquare(
+                        minefield, 
+                        row_counter, 
+                        column_counter, 
+                        squareSize
+                    );
+                    row_counter = row_counter - 1;
+                    column_counter = column_counter + 1;
                 }
-            }  
+                else {
+                    mines_nearby = 1;
+                }               
+            }             
             //spike on right middle
             mines_nearby = 0;
             row_counter = intial_row;
             column_counter = intial_col;
-            if (column_counter != (SIZE - 1)) {
-                while (mines_nearby == 0) {
-                    if (column_counter < (SIZE - 1)) {
-                        column_counter = column_counter + 1;
-                        minefield[row_counter][column_counter] = VISIBLE_SAFE;
-                        mines_nearby = minesInSquare(
-                            minefield, 
-                            row_counter, 
-                            column_counter, 
-                            squareSize
-                        );
-                    }
-                    else {
-                        mines_nearby = 1;
-                    }               
+            while (mines_nearby == 0) {
+                if (column_counter <= (SIZE - 1)) {
+                    minefield[row_counter][column_counter] = VISIBLE_SAFE;
+                    mines_nearby = minesInSquare(
+                        minefield, 
+                        row_counter, 
+                        column_counter, 
+                        squareSize
+                    );
+                    column_counter = column_counter + 1;
                 }
-            }
+                else {
+                    mines_nearby = 1;
+                }               
+            }           
             //spike on bottom right
             mines_nearby = 0;
             row_counter = intial_row;
             column_counter = intial_col;
-            if (row_counter != (SIZE - 1) || column_counter != (SIZE - 1)) {
-                while (mines_nearby == 0) {
-                    if (row_counter > 0 && column_counter < (SIZE - 1)) {
-                        column_counter = column_counter + 1;
-                        row_counter = row_counter + 1;
-                        minefield[row_counter][column_counter] = VISIBLE_SAFE;
-                        mines_nearby = minesInSquare(
-                            minefield, 
-                            row_counter, 
-                            column_counter, 
-                            squareSize
-                        );
-                    }
-                    else {
-                        mines_nearby = 1;
-                    }               
+            while (mines_nearby == 0) {
+                if (row_counter <= (SIZE - 1) && column_counter <= (SIZE - 1)) {
+                    minefield[row_counter][column_counter] = VISIBLE_SAFE;
+                    mines_nearby = minesInSquare(
+                        minefield, 
+                        row_counter, 
+                        column_counter, 
+                        squareSize
+                    );
+                    row_counter = row_counter + 1;
+                    column_counter = column_counter + 1;
                 }
-            } 
+                else {
+                    mines_nearby = 1;
+                }               
+            }             
             //spike on bottom middle
             mines_nearby = 0;
             row_counter = intial_row;
             column_counter = intial_col;
-            if (row_counter != 7) {
-                while (mines_nearby == 0) {
-                    if (row_counter < (SIZE - 1)) {
-                        row_counter = row_counter + 1;
-                        minefield[row_counter][column_counter] = VISIBLE_SAFE;
-                        mines_nearby = minesInSquare(
-                            minefield, 
-                            row_counter, 
-                            column_counter, 
-                            squareSize
-                        );
-                    }
-                    else {
-                        mines_nearby = 1;
-                    }               
+            while (mines_nearby == 0) {
+                if (row_counter <= (SIZE - 1)) {
+                    minefield[row_counter][column_counter] = VISIBLE_SAFE;
+                    mines_nearby = minesInSquare(
+                        minefield, 
+                        row_counter, 
+                        column_counter, 
+                        squareSize
+                    );
+                    row_counter = row_counter + 1;
                 }
-            }
-            //spike on bottom left
-            
+                else {
+                    mines_nearby = 1;
+                }               
+            }            
+            //spike on bottom left           
             mines_nearby = 0;
             row_counter = intial_row;
             column_counter = intial_col;
-            if (row_counter != (SIZE - 1) || column_counter != 0) {
-                while (mines_nearby == 0) {
-                    if (row_counter < (SIZE - 1) && column_counter > 0) {
-                        row_counter = row_counter + 1;
-                        column_counter = column_counter - 1;
-                        minefield[row_counter][column_counter] = VISIBLE_SAFE;
-                        mines_nearby = minesInSquare(
-                            minefield, 
-                            row_counter, 
-                            column_counter, 
-                            squareSize
-                        );
-                    }
-                    else {
-                        mines_nearby = 1;
-                    }               
-                } 
-            } 
-            //spike on left middle
-            
-            mines_nearby = 0;
-            row_counter = intial_row;
-            column_counter = intial_col;
-            if (column_counter != 0) {
-                while (mines_nearby == 0) {
-                    if (column_counter > 0) {                   
-                        column_counter = column_counter - 1;
-                        minefield[row_counter][column_counter] = VISIBLE_SAFE;
-                        mines_nearby = minesInSquare(
-                            minefield, 
-                            row_counter, 
-                            column_counter, 
-                            squareSize
-                        );
-                    }
-                    else {
-                        mines_nearby = 1;
-                    }               
+            while (mines_nearby == 0) {
+                if (row_counter <= (SIZE - 1) && column_counter >= 0) {
+                    minefield[row_counter][column_counter] = VISIBLE_SAFE;
+                    mines_nearby = minesInSquare(
+                        minefield, 
+                        row_counter, 
+                        column_counter, 
+                        squareSize
+                    );
+                    row_counter = row_counter + 1;
+                    column_counter = column_counter - 1;
                 }
+                else {
+                    mines_nearby = 1;
+                }               
             }              
-       }
+            //spike on left middle            
+            mines_nearby = 0;
+            row_counter = intial_row;
+            column_counter = intial_col;
+            while (mines_nearby == 0) {
+                if (column_counter >= 0) {                   
+                    minefield[row_counter][column_counter] = VISIBLE_SAFE;
+                    mines_nearby = minesInSquare(
+                        minefield, 
+                        row_counter, 
+                        column_counter, 
+                        squareSize
+                    );
+                    column_counter = column_counter - 1;
+                }
+                else {
+                    mines_nearby = 1;
+                }               
+            }                    
+        }
             
     }
     //2. If input coordinate was mine then game over    

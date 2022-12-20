@@ -5,7 +5,9 @@ To Start Game:
 4. Enter GamePlay_Mode by entering '5'
 5. Play Minesweeper using the commands below
 
-// Command codes
+
+Command codes
+
 DETECT_ROW              1 (Reveal how many mines is on row X. E.g: "1 0" = Reveal no. of mines on row 0)
 
 DETECT_COL              2 (Reveal how many mines is on column X. E.g: "2 0" = Reveal no. of mines on column 0)
@@ -21,8 +23,11 @@ DEBUG_MODE              6 (Debug mode shows mines location E.g: '6')
 REVEAL_RADIAL           7 (Reveal how many mines is on X,Y and all on all diagonials of X,Y E.g "7 2 3" = Reveal no of mines on row 2 and column 3 and along it's diagonals)
 
 // Possible square states.
+
 VISIBLE_SAFE    0
+
 HIDDEN_SAFE     1
+
 HIDDEN_MINE     2
 
 Example: 2 mines at (1,1) and (4,4,)
